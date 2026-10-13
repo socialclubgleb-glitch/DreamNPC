@@ -94,14 +94,22 @@ function RoomPopulator.SpawnLight(roomModel)
 	pointLight.Brightness = 2
 	pointLight.Shadows = true
 	pointLight.Parent = lightFixture
+
+	-- Tag the light for EntityEventManager to control flickering
+	CollectionService:AddTag(lightFixture, "FlickeringLight")
 end
 
 -- Main function called by RoomGenerator
 function RoomPopulator.Populate(roomModel)
-	-- Always spawn a light
-	RoomPopulator.SpawnLight(roomModel)
+	local isDarkRoom = math.random(1, 100) <= 20 -- 20% chance for a Dark Room
 
-	local roomType = roomModel.Name
+	if isDarkRoom then
+		roomModel:SetAttribute("IsDarkRoom", true)
+	else
+		RoomPopulator.SpawnLight(roomModel)
+	end
+
+	local roomType = roomModel.Name:gsub("Room_%d+", "") -- Strip index if present
 
 	-- Specific populating logic based on template type
 	if string.find(roomType, "SquareRoom") then
