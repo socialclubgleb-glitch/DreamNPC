@@ -10,6 +10,8 @@ local Workspace = game:GetService("Workspace")
 
 local RoomTemplates = ReplicatedStorage:WaitForChild("RoomTemplates")
 RoomTemplates:WaitForChild("SquareRoom") -- Ensure all templates are fully built
+
+local RoomPopulator = require(script.Parent:WaitForChild("RoomPopulator"))
 local MapFolder = Instance.new("Folder")
 MapFolder.Name = "EstateMap"
 MapFolder.Parent = Workspace
@@ -35,7 +37,7 @@ end
 local function GenerateRoom(templateModel, previousRoom)
 	local newRoom = templateModel:Clone()
 	RoomIndex = RoomIndex + 1
-	newRoom.Name = "Room_" .. tostring(RoomIndex)
+	newRoom.Name = templateModel.Name .. "_Room_" .. tostring(RoomIndex)
 
 	local entryPart = newRoom:FindFirstChild("Entry")
 	local exitPart = newRoom:FindFirstChild("Exit")
@@ -69,6 +71,12 @@ local function GenerateRoom(templateModel, previousRoom)
 	end
 
 	newRoom.Parent = MapFolder
+
+	-- Populate room with props and loot (skip start room for safety)
+	if previousRoom ~= nil then
+		RoomPopulator.Populate(newRoom)
+	end
+
 	table.insert(GeneratedRooms, newRoom)
 	return newRoom
 end

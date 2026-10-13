@@ -77,10 +77,28 @@ local function OnDoorAdded(doorModel)
 	end
 end
 
+local function OnLootAdded(lootPart)
+	local prompt = lootPart:FindFirstChildOfClass("ProximityPrompt")
+	if prompt then
+		prompt.Triggered:Connect(function(player)
+			-- In the future, we'll hook this up to a leaderstats/DataStore system
+			-- For now, give feedback and destroy
+			print(player.Name .. " collected Gold!")
+			lootPart:Destroy()
+		end)
+	end
+end
+
 -- Hook up existing and future doors
 for _, door in ipairs(CollectionService:GetTagged("InteractiveDoor")) do
 	OnDoorAdded(door)
 end
 CollectionService:GetInstanceAddedSignal("InteractiveDoor"):Connect(OnDoorAdded)
 
-print("[InteractionManager] Initialized Door Interactions.")
+-- Hook up existing and future loot
+for _, loot in ipairs(CollectionService:GetTagged("LootCoin")) do
+	OnLootAdded(loot)
+end
+CollectionService:GetInstanceAddedSignal("LootCoin"):Connect(OnLootAdded)
+
+print("[InteractionManager] Initialized Door and Loot Interactions.")
