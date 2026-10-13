@@ -9,6 +9,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local CollectionService = game:GetService("CollectionService")
 
 local RoomTemplates = Instance.new("Folder")
 RoomTemplates.Name = "RoomTemplates"
@@ -48,6 +49,48 @@ local function CreateAttachmentPoint(name, cframe, parent)
 	text.TextScaled = true
 	text.TextColor3 = name == "Entry" and Color3.new(0,1,0) or Color3.new(1,0,0)
 	text.Parent = surface
+
+	-- Build physical interactive door at the Entry point (except StartRoom which has no entry)
+	if name == "Entry" then
+		local doorModel = Instance.new("Model")
+		doorModel.Name = "DoorModel"
+
+		-- Hinge part (invisible, used as rotation pivot for TweenService)
+		local hinge = Instance.new("Part")
+		hinge.Name = "Hinge"
+		hinge.Size = Vector3.new(0.5, 8, 0.5)
+		-- Position hinge to the left edge of the doorway
+		hinge.CFrame = cframe * CFrame.new(-2, 0, 0)
+		hinge.Anchored = true
+		hinge.CanCollide = false
+		hinge.Transparency = 1
+		hinge.Parent = doorModel
+
+		-- The actual physical door panel
+		local doorPanel = Instance.new("Part")
+		doorPanel.Name = "DoorPanel"
+		doorPanel.Size = Vector3.new(4, 8, 0.5)
+		-- Position panel relative to hinge (offset by half width so it rotates properly)
+		doorPanel.CFrame = hinge.CFrame * CFrame.new(2, 0, 0)
+		doorPanel.Anchored = true
+		doorPanel.Color = Color3.fromRGB(101, 67, 33) -- Brown wood
+		doorPanel.Material = Enum.Material.Wood
+		doorPanel.Parent = doorModel
+
+		-- ProximityPrompt for interaction
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.ActionText = "Open"
+		prompt.ObjectText = "Door"
+		prompt.RequiresLineOfSight = false
+		prompt.MaxActivationDistance = 8
+		prompt.Parent = doorPanel
+
+		doorModel.PrimaryPart = hinge
+		doorModel.Parent = parent
+
+		-- Tag for the InteractionManager
+		CollectionService:AddTag(doorModel, "InteractiveDoor")
+	end
 
 	return p
 end
@@ -92,8 +135,13 @@ local function BuildRoom_Square()
 	local floor = CreateBasePart("Floor", Vector3.new(40, 1, 40), Vector3.new(0, -0.5, 0), Color3.fromRGB(90, 70, 70), model)
 	local roof = CreateBasePart("Roof", Vector3.new(40, 1, 40), Vector3.new(0, 15.5, 0), Color3.fromRGB(30, 30, 30), model)
 
-	local wallL = CreateBasePart("Wall", Vector3.new(1, 15, 40), Vector3.new(-19.5, 7, 0), Color3.fromRGB(80, 80, 80), model)
+	-- Left wall with a hole for the exit
+	local wallL1 = CreateBasePart("Wall", Vector3.new(1, 15, 16), Vector3.new(-19.5, 7, 12), Color3.fromRGB(80, 80, 80), model)
+	local wallL2 = CreateBasePart("Wall", Vector3.new(1, 15, 16), Vector3.new(-19.5, 7, -12), Color3.fromRGB(80, 80, 80), model)
+	local wallLTop = CreateBasePart("Wall", Vector3.new(1, 7, 8), Vector3.new(-19.5, 11.5, 0), Color3.fromRGB(80, 80, 80), model)
+
 	local wallR = CreateBasePart("Wall", Vector3.new(1, 15, 40), Vector3.new(19.5, 7, 0), Color3.fromRGB(80, 80, 80), model)
+	local wallFront = CreateBasePart("Wall", Vector3.new(40, 15, 1), Vector3.new(0, 7, -19.5), Color3.fromRGB(80, 80, 80), model)
 
 	local entryPoint = CreateAttachmentPoint("Entry", CFrame.new(0, 4, 19.5) * CFrame.Angles(0, math.rad(180), 0), model)
 

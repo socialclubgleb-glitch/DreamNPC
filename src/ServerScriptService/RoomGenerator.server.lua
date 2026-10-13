@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local RoomTemplates = ReplicatedStorage:WaitForChild("RoomTemplates")
+RoomTemplates:WaitForChild("SquareRoom") -- Ensure all templates are fully built
 local MapFolder = Instance.new("Folder")
 MapFolder.Name = "EstateMap"
 MapFolder.Parent = Workspace
