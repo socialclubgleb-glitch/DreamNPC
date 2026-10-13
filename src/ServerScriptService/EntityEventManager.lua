@@ -7,8 +7,15 @@
 ]]--
 
 local CollectionService = game:GetService("CollectionService")
+local WraithEntity = require(script.Parent:WaitForChild("WraithEntity"))
 
 local EntityEventManager = {}
+
+-- Store a reference to generated rooms so entities know where to route
+local globalRoomList = {}
+function EntityEventManager.UpdateRoomList(rooms)
+	globalRoomList = rooms
+end
 
 -- Function to make all lights flicker globally or in specific rooms
 function EntityEventManager.FlickerLights(duration)
@@ -61,12 +68,16 @@ function EntityEventManager.FlickerLights(duration)
 			local pointLight = lightFixture:FindFirstChildOfClass("PointLight")
 			if pointLight then pointLight.Enabled = state.PointLightEnabled end
 		end
+
+		-- Event Chain: After flickering, spawn Wraith
+		task.wait(1)
+		WraithEntity.Spawn(globalRoomList)
 	end)
 end
 
 -- Expose for testing via Chat or other triggers later
-_G.TriggerFlicker = function()
-	print("[EntityEventManager] Triggering light flicker event...")
+_G.TriggerWraithEvent = function()
+	print("[EntityEventManager] Triggering Wraith Event Sequence...")
 	EntityEventManager.FlickerLights(3)
 end
 

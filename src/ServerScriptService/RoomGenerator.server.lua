@@ -12,6 +12,8 @@ local RoomTemplates = ReplicatedStorage:WaitForChild("RoomTemplates")
 RoomTemplates:WaitForChild("SquareRoom") -- Ensure all templates are fully built
 
 local RoomPopulator = require(script.Parent:WaitForChild("RoomPopulator"))
+local EntityEventManager = require(script.Parent:WaitForChild("EntityEventManager"))
+
 local MapFolder = Instance.new("Folder")
 MapFolder.Name = "EstateMap"
 MapFolder.Parent = Workspace
@@ -91,5 +93,8 @@ for i = 1, INITIAL_ROOMS do
 	local randomTemplate = GetRandomTemplate()
 	currentRoom = GenerateRoom(randomTemplate, currentRoom)
 end
+
+-- Update the global room list for entities
+EntityEventManager.UpdateRoomList(GeneratedRooms)
 
 print("[RoomGenerator] Successfully generated " .. tostring(#GeneratedRooms) .. " rooms using CFrame math.")

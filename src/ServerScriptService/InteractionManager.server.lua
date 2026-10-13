@@ -89,6 +89,60 @@ local function OnLootAdded(lootPart)
 	end
 end
 
+local function OnClosetAdded(closetModel)
+	local door = closetModel:FindFirstChild("Door")
+	local body = closetModel.PrimaryPart
+	if not door or not body then return end
+
+	local prompt = door:FindFirstChildOfClass("ProximityPrompt")
+	if prompt then
+		prompt.Triggered:Connect(function(player)
+			local char = player.Character
+			if not char or not char.PrimaryPart then return end
+
+			local isHiding = player:GetAttribute("IsHiding")
+
+			if not isHiding then
+				-- Enter closet
+				player:SetAttribute("IsHiding", true)
+				prompt.ActionText = "Exit"
+
+				-- Store original position to return to
+				player:SetAttribute("OriginalCFrame", char.PrimaryPart.CFrame)
+
+				-- Move player inside, freeze them, and make invisible
+				char.PrimaryPart.CFrame = body.CFrame
+				char.PrimaryPart.Anchored = true
+
+				for _, part in ipairs(char:GetDescendants()) do
+					if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+						part.Transparency = 1
+					end
+				end
+			else
+				-- Exit closet
+				player:SetAttribute("IsHiding", false)
+				prompt.ActionText = "Hide"
+
+				-- Restore position
+				local originalCFrame = player:GetAttribute("OriginalCFrame")
+				if originalCFrame then
+					char.PrimaryPart.CFrame = originalCFrame
+				end
+
+				char.PrimaryPart.Anchored = false
+
+				-- Restore visibility
+				for _, part in ipairs(char:GetDescendants()) do
+					if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+						part.Transparency = 0
+					end
+				end
+			end
+		end)
+	end
+end
+
 -- Hook up existing and future doors
 for _, door in ipairs(CollectionService:GetTagged("InteractiveDoor")) do
 	OnDoorAdded(door)
@@ -101,4 +155,10 @@ for _, loot in ipairs(CollectionService:GetTagged("LootCoin")) do
 end
 CollectionService:GetInstanceAddedSignal("LootCoin"):Connect(OnLootAdded)
 
-print("[InteractionManager] Initialized Door and Loot Interactions.")
+-- Hook up existing and future closets
+for _, closet in ipairs(CollectionService:GetTagged("InteractiveCloset")) do
+	OnClosetAdded(closet)
+end
+CollectionService:GetInstanceAddedSignal("InteractiveCloset"):Connect(OnClosetAdded)
+
+print("[InteractionManager] Initialized Door, Loot, and Closet Interactions.")
